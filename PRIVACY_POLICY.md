@@ -1,72 +1,35 @@
-# Privacy Policy for Viewer Metrics
+# Privacy Policy — Viewer Metrics
 
 **Last updated: October 27, 2026**
 
-## Overview
-
-Viewer Metrics is a Chrome extension for Twitch viewer analytics. This policy describes the intended behavior of the 0.9.953 hardened distribution. The publisher must verify it against the exact source and build shipped to users.
+This policy describes the source snapshot currently being published to this repository: Viewer Metrics 0.9.951, based on the public upstream project. Verify these statements against the exact release artifact before distribution.
 
 ## Data the extension processes
 
-When you start tracking a channel, the extension may process:
-- Twitch viewer usernames and observed first/last-seen times;
-- account creation dates and publicly available profile fields, including avatars and descriptions;
-- public profile/following information requested for the extension's analytics;
-- tracking preferences and diagnostic information.
-
-These fields are used to show metrics, charts, viewer profiles, and heuristic account-creation analysis. Bot indicators are estimates, not proof of automated behavior.
+While tracking is active, the extension may process viewer usernames, timestamps, account creation dates, publicly available profile details, viewer metrics, following-related information, and user-configured preferences. This information is used to display viewer analytics, charts, and account-creation-pattern heuristics. Such heuristics can produce false positives and are not proof that an account is automated.
 
 ## Network requests
 
-The extension sends requests directly to Twitch endpoints, including `https://gql.twitch.tv/gql`, using a public Twitch Client ID.
+The extension makes requests directly to Twitch endpoints, including `gql.twitch.tv`, to retrieve viewer and profile information. Twitch receives the request details needed to serve those requests and handles them under its own privacy notice and terms.
 
-- The 0.9.953 source archive does not implement OAuth token interception.
-- Twitch receives the request data needed to answer these requests, such as channel/login identifiers, and processes it under Twitch's own terms and privacy notice.
-- The extension is not intended to send viewer datasets to a server operated by the Viewer Metrics publisher.
-- The extension does not intentionally use advertising analytics, tracking pixels, or a separate telemetry backend.
+The reviewed 0.9.951 source uses a public Twitch Client ID and does not implement OAuth token interception. This policy does not claim that no data leaves the device: requests to Twitch are part of the extension's functionality.
 
-## Storage and retention
+## Local storage and retention
 
-- Configuration preferences may be stored in Chrome extension storage.
-- Active tracking sessions and analysis data are held primarily in memory.
-- Temporary viewer-page handoff data and bounded diagnostic logs may be written to Chrome local storage.
-- The extension removes inactive viewers from the active session according to the configured timeout. This does **not** mean every locally stored value automatically expires after 24 hours.
-- Values may remain until overwritten or the extension's data is cleared. Users can clear extension data through Chrome's extension settings or uninstall the extension.
+Configuration preferences are stored using Chrome extension storage. Active tracking state is held primarily in memory, but the code also contains paths for temporarily storing viewer-page handoff data and diagnostic logs. Values written to extension storage may persist until overwritten or cleared; do not assume every value expires automatically after 24 hours.
+
+You can stop tracking, clear extension data through Chrome, or uninstall the extension. Clearing storage or uninstalling may remove locally retained data.
 
 ## Permissions
 
-The hardened manifest uses:
-- **storage** — to save preferences and limited handoff/diagnostic data;
-- **tabs** — to coordinate tracking and viewer-detail tabs;
-- **Host access to `https://gql.twitch.tv/*`** — to make HTTPS requests to Twitch's GraphQL endpoint;
-- **Content script matching on Twitch channel pages** — to display the extension UI.
-
-The source must continue to be reviewed whenever permissions or data flows change.
-
-## Security
-
-The extension is designed to communicate with Twitch over HTTPS and not to capture OAuth tokens. Users should install the extension only from a source they trust and should review the code and permission prompts before enabling it.
-
-## Your choices
-
-You can stop tracking at any time, change extension preferences, clear extension storage, or uninstall the extension. Uninstalling or clearing storage may remove locally retained data.
+The 0.9.951 upstream manifest requests `storage`, `tabs`, and `scripting`, and broad Twitch host access. Content scripts run on Twitch pages; extension pages and bundled resources are declared as web-accessible resources for Twitch page contexts. Review the permission prompt before enabling the extension. These permissions should be narrowed only after confirming that the affected features continue to work.
 
 ## Third-party service
 
-Viewer Metrics relies on Twitch. Please review the [Twitch Privacy Notice](https://www.twitch.tv/p/legal/privacy-notice/) and Twitch's terms to understand how Twitch handles requests sent to its services.
+Viewer Metrics relies on Twitch. Please review the [Twitch Privacy Notice](https://www.twitch.tv/p/legal/privacy-notice/) to understand how Twitch handles requests sent to its services.
 
-## Children
+## Policy changes and contact
 
-The extension is not intended for children under 13. The publisher must ensure that the product and its disclosures comply with applicable laws in the jurisdictions where it is offered.
+This policy may be revised as source code and data flows change. Questions can be raised via the [GitHub repository](https://github.com/vibecoderqin/viewermetrics/issues).
 
-## Policy updates and contact
-
-This policy may change as the extension evolves. For questions, open an issue in the [vibecoderqin/viewermetrics repository](https://github.com/vibecoderqin/viewermetrics).
-
-## Summary
-
-**The extension does:** process viewer and profile data for local analytics; store preferences and some limited temporary data locally; make requests directly to Twitch.
-
-**The extension is not intended to:** intercept OAuth tokens, sell viewer data, or send tracking datasets to a publisher-operated analytics backend.
-
-This policy describes intended data practices and is not a legal compliance certification. The publisher is responsible for verifying the published build, Chrome Web Store data declarations, and applicable legal requirements.
+This policy is a summary of intended behavior, not a legal compliance certification. The publisher is responsible for verifying the published build, Chrome Web Store declarations, and applicable legal requirements.
