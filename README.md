@@ -1,48 +1,39 @@
 # Viewer Metrics
 
-Viewer Metrics is a Manifest V3 Chrome extension for Twitch that tracks channel viewer data and highlights account-creation patterns that may indicate suspicious or automated accounts.
+Viewer Metrics is a Manifest V3 Chrome extension for Twitch that tracks channel viewers and analyzes account-creation patterns that may indicate suspicious or automated accounts.
 
-> **Important:** Account-age and account-creation patterns are heuristic signals, not proof that an account is a bot. Review the context before drawing conclusions.
+> **Important:** account age and creation-date patterns are heuristic signals, not proof that an account is a bot.
 
 ## Features
 
-- Viewer-count and viewer-list tracking on Twitch channel pages.
-- Viewer profile details and account creation dates where available.
-- Charts and summaries for account-creation patterns.
-- Searchable viewer data and export tools.
-- Adaptive polling intended to reduce unnecessary network requests.
-- Local-first processing of tracking and analysis data.
+- Track viewer counts and lists on Twitch channel pages.
+- Show public viewer profile details where available.
+- Visualize account-creation patterns and viewer history.
+- Search viewer data and export reports.
+- Adjust request frequency based on stream conditions.
 
-## Privacy and network activity
+## Install
 
-- Requests are sent directly to Twitch endpoints, including `gql.twitch.tv`, to retrieve channel and profile data.
-- The hardened 0.9.953 archive does not intercept OAuth tokens or authentication headers; it uses a Twitch Client ID.
-- Most active tracking state is kept in memory. Some settings, viewer-page handoff data, and diagnostic logs may be stored in Chrome extension storage.
-- Do not assume that data is never persisted: see [PRIVACY_POLICY.md](PRIVACY_POLICY.md) for the storage and retention details.
+1. Download the ZIP from [GitHub Releases](https://github.com/vibecoderqin/viewermetrics/releases).
+2. Extract it into a folder.
+3. Open `chrome://extensions/` in Chrome.
+4. Enable **Developer mode**.
+5. Click **Load unpacked** and select the extracted folder containing `manifest.json`.
 
-## Install from source
+Alternatively, clone the repository and load the project root.
 
-**The complete extension source is not yet published on the repository's default branch.** The current `main` branch only contains the license file, and this documentation branch does not include the extension runtime files. Do not try to load this repository as an extension until `manifest.json`, `background/`, `content/`, `pages/`, `shared/`, `lib/`, and the required assets are present.
+## Version and source
 
-To install a complete source distribution:
+The first complete source snapshot published to this repository is the upstream Viewer Metrics source at version **0.9.951**, synced from [viewermetrics/viewermetrics](https://github.com/viewermetrics/viewermetrics). This is an authentic source baseline; it is **not** the separate locally prepared 0.9.953 hardened archive mentioned in earlier chat messages. That 0.9.953 archive has not been uploaded to this repository.
 
-1. Unpack the extension archive into a directory.
-2. Open `chrome://extensions/` in Chrome.
-3. Enable **Developer mode**.
-4. Select **Load unpacked** and choose the directory containing `manifest.json`.
+## Network activity and privacy
 
-Keep `manifest.json` at the extension root and preserve the relative paths used by the manifest.
+The extension sends requests directly to Twitch, including its GraphQL endpoint, to retrieve channel and profile information. The source uses a public Twitch Client ID and does not implement OAuth-token interception. Viewer data is processed primarily in the browser; preferences and some temporary or diagnostic values may be stored in Chrome extension storage. See [PRIVACY_POLICY.md](PRIVACY_POLICY.md) and verify it against the exact build you use.
 
-## Security and validation
+## Development and validation
 
-Before using a build, test the main Twitch channel page, viewer profile pages, API failure and rate-limit behavior, multiple tabs, and stopping/restarting tracking. Chrome may terminate Manifest V3 service workers; short-interval polling and state recovery need runtime validation in the target Chrome version.
-
-See [AUDIT_FIXES.md](AUDIT_FIXES.md) for the hardening changes described for the 0.9.953 archive and [PRIVACY_POLICY.md](PRIVACY_POLICY.md) for privacy details. These documents should be verified against the exact source tree before publishing a release.
-
-## Third-party libraries
-
-The 0.9.953 distribution archive includes Chart.js and chartjs-adapter-date-fns. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md); preserve the upstream license headers when redistributing the bundled files.
+The extension uses a Manifest V3 service worker, content scripts, extension pages, and bundled Chart.js libraries. Before relying on it, test live Twitch tracking, API rate limiting, multiple tabs, and stop/restart behavior in your target Chrome version. Service-worker lifetime behavior can vary with Chrome's MV3 implementation.
 
 ## License
 
-Project code is licensed under the [MIT License](LICENSE). Third-party libraries remain subject to their own license notices. The license does not imply endorsement by Twitch.
+Project code is distributed under the [MIT License](LICENSE). Third-party libraries are subject to their own license notices. This project is not endorsed by Twitch.
