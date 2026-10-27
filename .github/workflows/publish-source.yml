@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - ".release-payload/viewermetrics-0.9.953-source.zip"
+      - ".release-payload/**"
   workflow_dispatch:
 
 permissions:
@@ -33,10 +33,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -s .release-payload/viewermetrics-0.9.953-source.zip
-          cp .release-payload/viewermetrics-0.9.953-source.zip /tmp/viewermetrics-0.9.953-source.zip
           mkdir -p /tmp/viewermetrics-source
-          unzip -q .release-payload/viewermetrics-0.9.953-source.zip -d /tmp/viewermetrics-source
+          if [ -s .release-payload/viewermetrics-0.9.953-source.zip ]; then
+            cp .release-payload/viewermetrics-0.9.953-source.zip /tmp/viewermetrics-0.9.953-source.zip
+          else
+            test -n "$(find .release-payload -maxdepth 1 -type f -name 'part*.b64' -print -quit)"
+            cat .release-payload/part*.b64 | base64 --decode > /tmp/viewermetrics-0.9.953-source.zip
+          fi
+          echo "36e8af93ccdea5a06186f398060e90b0084aaee1a063f9ff1828632cb847672d  /tmp/viewermetrics-0.9.953-source.zip" | sha256sum --check
+          unzip -q /tmp/viewermetrics-0.9.953-source.zip -d /tmp/viewermetrics-source
           test -s /tmp/viewermetrics-source/manifest.json
           python3 - <<'PY'
           from pathlib import Path
