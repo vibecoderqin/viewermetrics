@@ -34,6 +34,7 @@ jobs:
         run: |
           set -euo pipefail
           test -s .release-payload/viewermetrics-0.9.953-source.zip
+          cp .release-payload/viewermetrics-0.9.953-source.zip /tmp/viewermetrics-0.9.953-source.zip
           mkdir -p /tmp/viewermetrics-source
           unzip -q .release-payload/viewermetrics-0.9.953-source.zip -d /tmp/viewermetrics-source
           test -s /tmp/viewermetrics-source/manifest.json
@@ -95,7 +96,7 @@ jobs:
         run: |
           set -euo pipefail
           if gh release view v0.9.953 >/dev/null 2>&1; then
-            gh release upload v0.9.953 .release-payload/viewermetrics-0.9.953-source.zip --clobber
+            gh release upload v0.9.953 /tmp/viewermetrics-0.9.953-source.zip --clobber
           else
-            gh release create v0.9.953 .release-payload/viewermetrics-0.9.953-source.zip --target main --title "Viewer Metrics 0.9.953" --notes-file CHANGELOG.md
+            gh release create v0.9.953 /tmp/viewermetrics-0.9.953-source.zip --target main --title "Viewer Metrics 0.9.953" --notes-file CHANGELOG.md
           fi
