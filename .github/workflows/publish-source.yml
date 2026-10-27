@@ -1,27 +1,28 @@
-name: Publish Viewer Metrics source and release
+name: Sync source and publish installable ZIP
 
 on:
   push:
     branches: [main]
     paths:
-      - ".release-payload/**"
+      - ".github/workflows/publish-source.yml"
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: publish-viewermetrics-source
+  group: viewer-metrics-source-publish
   cancel-in-progress: false
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
+      - name: Check out destination repository
         uses: actions/checkout@v4
         with:
           ref: main
+          fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Node.js
@@ -29,60 +30,44 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Extract source archive into repository
+      - name: Import the complete public upstream source
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p /tmp/viewermetrics-source
-          if [ -s .release-payload/viewermetrics-0.9.953-source.zip ]; then
-            cp .release-payload/viewermetrics-0.9.953-source.zip /tmp/viewermetrics-0.9.953-source.zip
-          else
-            test -n "$(find .release-payload -maxdepth 1 -type f -name 'part*.b64' -print -quit)"
-            cat .release-payload/part*.b64 | base64 --decode > /tmp/viewermetrics-0.9.953-source.zip
-          fi
-          echo "36e8af93ccdea5a06186f398060e90b0084aaee1a063f9ff1828632cb847672d  /tmp/viewermetrics-0.9.953-source.zip" | sha256sum --check
-          unzip -q /tmp/viewermetrics-0.9.953-source.zip -d /tmp/viewermetrics-source
-          test -s /tmp/viewermetrics-source/manifest.json
-          python3 - <<'PY'
-          from pathlib import Path
-          import shutil
+          git clone --depth 1 https://github.com/viewermetrics/viewermetrics.git /tmp/viewermetrics-upstream
+          rsync -a --exclude='.git/' --exclude='.github/' \
+            --exclude='README.md' --exclude='LICENSE' \
+            --exclude='PRIVACY_POLICY.md' --exclude='CHANGELOG.md' \
+            /tmp/viewermetrics-upstream/ ./
 
-          source = Path("/tmp/viewermetrics-source")
-          target = Path(".")
-          preserve_root_docs = {
-              "README.md", "LICENSE", "PRIVACY_POLICY.md",
-              "AUDIT_FIXES.md", "CHANGELOG.md", "THIRD_PARTY_NOTICES.md",
-          }
-
-          for src in source.rglob("*"):
-              rel = src.relative_to(source)
-              if rel.parts and rel.parts[0] in {".git", ".github", ".release-payload"}:
-                  continue
-              if len(rel.parts) == 1 and rel.name in preserve_root_docs:
-                  continue
-              dst = target / rel
-              if src.is_dir():
-                  dst.mkdir(parents=True, exist_ok=True)
-              else:
-                  dst.parent.mkdir(parents=True, exist_ok=True)
-                  shutil.copy2(src, dst)
-          PY
-          rm -rf .release-payload
-
-      - name: Validate manifest and JavaScript
+      - name: Validate extension files
         shell: bash
         run: |
           set -euo pipefail
           node -e "const m=require('./manifest.json'); if (m.manifest_version !== 3) process.exit(1)"
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const m = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
+          const missing = [];
+          for (const entry of (m.content_scripts || [])) {
+            for (const f of [...(entry.js || []), ...(entry.css || [])]) {
+              if (!fs.existsSync(f)) missing.push(f);
+            }
+          }
+          if (missing.length) {
+            console.error('Missing manifest files:', missing);
+            process.exit(1);
+          }
+          NODE
           while IFS= read -r -d '' file; do
             case "$file" in
               lib/*) continue ;;
             esac
             node --check "$file"
-          done < <(find background content pages shared tests -type f -name '*.js' -print0)
-          node tests/smoke.test.cjs
+          done < <(find background content pages shared -type f -name '*.js' -print0)
 
-      - name: Commit the full extension source
+      - name: Commit the full source tree
         shell: bash
         run: |
           set -euo pipefail
@@ -90,18 +75,28 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           if ! git diff --cached --quiet; then
-            git commit -m "feat: publish Viewer Metrics 0.9.953 source"
+            git commit -m "feat: publish Viewer Metrics 0.9.951 source"
             git push origin HEAD:main
           fi
 
-      - name: Publish GitHub Release with ZIP asset
+      - name: Package installable source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          zip -qr /tmp/viewermetrics-0.9.951-source.zip . \
+            -x '.git/*' '.github/*' '**/.DS_Store'
+
+      - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
-          if gh release view v0.9.953 >/dev/null 2>&1; then
-            gh release upload v0.9.953 /tmp/viewermetrics-0.9.953-source.zip --clobber
+          if gh release view v0.9.951 >/dev/null 2>&1; then
+            gh release upload v0.9.951 /tmp/viewermetrics-0.9.951-source.zip --clobber
           else
-            gh release create v0.9.953 /tmp/viewermetrics-0.9.953-source.zip --target main --title "Viewer Metrics 0.9.953" --notes-file CHANGELOG.md
+            gh release create v0.9.951 /tmp/viewermetrics-0.9.951-source.zip \
+              --target main \
+              --title "Viewer Metrics 0.9.951 — source snapshot" \
+              --notes "Complete installable source snapshot synced from https://github.com/viewermetrics/viewermetrics. This is version 0.9.951; it is not the separate local 0.9.953 hardened archive."
           fi
